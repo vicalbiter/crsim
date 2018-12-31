@@ -17,15 +17,44 @@ class Agent:
         if dir.length() > 3:
             self.pos = self.pos + speed*dir.normalize()
 
+    def findPath(self, navgraph):
+        posclosest = findClosestPoint(self.pos, navgraph)
+        tarclosest = findClosestPoint(self.target, navgraph)
+        path = astar(Node(None, posclosest), Node(None, tarclosest), navgraph)
+        return path
+
+    def astar(initial, goal, graph):
+        q = []
+
+    def findClosestPoint(self, pos, navgraph):
+        closest = Vector2(navgraph.gpoints[0])
+        cdistance = pos.distance_to(closest)
+        for p in navgraph.gpoints:
+            vp = Vector2(p)
+            if pos.x != vp.x and pos.y != vp.y:
+                if pos.distance_to(vp) < cdistance:
+                    closest = vp
+                    cdistance = pos.distance_to(vp)
+        return closest
+
+class Node:
+    def __init__(self, parent, pos):
+        self.parent = parent
+        self.pos = pos
+
+
 class AgentGroup:
-    def __init__(self, n, w, h):
+    def __init__(self, n, w, h, navgraph):
         self.agents = []
         for i in range(n):
             a = Agent(int(uniform(15,20)))
-            a.pos = Vector2(uniform(300, 500), uniform(200, 400))
-            #a.target = Vector2(uniform(0, w), uniform(0, h))
-            a.target = Vector2(a.pos.x, a.pos.y)
+            a.pos = Vector2(uniform(0, w), uniform(0, h))
+            #a.pos = Vector2(uniform(300, 500), uniform(200, 400))
+            a.target = Vector2(uniform(0, w), uniform(0, h))
+            #a.target = Vector2(a.pos.x, a.pos.y)
             self.agents.append(a)
+            print a.findClosestPoint(a.pos, navgraph)
+            print a.findClosestPoint(a.target, navgraph)
 
         self.selected = self.agents[0]
 
@@ -72,6 +101,18 @@ class NavGraph:
         self.adjmatrix = adjmatrix
         self.gpoints = gpoints
 
+    def neighbors(self, vertex):
+        for i in range(len(self.gpoints)):
+            vp = Vector2(self.gpoints[i])
+            if vertex.x == vp.x and vertex.y == vp.y:
+                neighbors = []
+                for j in range(len(self.adjmatrix[i])):
+                    if self.adjmatrix[i][j] == 1:
+                        neighbors.append(self.gpoints[j])
+                    return neighbors
+        return None
+
+
     def drawGraph(self, screen):
         i = 0
         for i in range(len(self.gpoints)):
@@ -87,9 +128,6 @@ class Simulation(PygameHelper):
         self.w, self.h = 800, 600
         PygameHelper.__init__(self, size=(self.w, self.h), fill=((255,255,255)))
 
-        # Initiliaze list of agents
-        self.agents = AgentGroup(10, self.w, self.h)
-
         # Initialize navigation graph
         adjmatrix = [[1,1,0,0,0,0,0,0,0,0,0,0,0],[1,1,1,1,1,0,0,0,0,0,0,0,0],
         [0,1,1,0,0,0,0,0,0,0,0,0,0],[0,1,0,1,0,0,0,0,0,1,1,0,0],
@@ -102,9 +140,12 @@ class Simulation(PygameHelper):
         (700,300),(700,200),(700,100),(200,100),(200,300),(100,200),(100,500)]
         self.navgraph = NavGraph(adjmatrix, gpoints)
 
+        # Initiliaze list of agents
+        self.agents = AgentGroup(1, self.w, self.h, self.navgraph)
+
     def update(self):
         # Update position of agents
-        self.agents.updatePositions()
+        #self.agents.updatePositions()
 
         # Handle collisions between agents
         self.agents.handleCollisions()

@@ -18,13 +18,28 @@ class Agent:
             self.pos = self.pos + speed*dir.normalize()
 
     def findPath(self, navgraph):
-        posclosest = findClosestPoint(self.pos, navgraph)
-        tarclosest = findClosestPoint(self.target, navgraph)
-        path = astar(Node(None, posclosest), Node(None, tarclosest), navgraph)
+        posclosest = self.findClosestPoint(self.pos, navgraph)
+        tarclosest = self.findClosestPoint(self.target, navgraph)
+        self.astar(Node(None, posclosest), Node(None, tarclosest), navgraph)
+
+
+    def astar(self, initial, goal, navgraph):
+        q = []
+        current = initial
+        while current.pos.x != goal.pos.x or current.pos.y != goal.pos.y:
+            neighbors = navgraph.neighbors(current.pos)
+            for p in neighbors:
+                q.insert(0, Node(current, p))
+            current = q.pop()
+        print 'found it'
+        path = []
+        while current != None:
+            path.insert(0, current.pos)
+            current = current.parent
+        for p in path:
+            print p
         return path
 
-    def astar(initial, goal, graph):
-        q = []
 
     def findClosestPoint(self, pos, navgraph):
         closest = Vector2(navgraph.gpoints[0])
@@ -53,8 +68,7 @@ class AgentGroup:
             a.target = Vector2(uniform(0, w), uniform(0, h))
             #a.target = Vector2(a.pos.x, a.pos.y)
             self.agents.append(a)
-            print a.findClosestPoint(a.pos, navgraph)
-            print a.findClosestPoint(a.target, navgraph)
+            a.findPath(navgraph)
 
         self.selected = self.agents[0]
 
@@ -107,11 +121,10 @@ class NavGraph:
             if vertex.x == vp.x and vertex.y == vp.y:
                 neighbors = []
                 for j in range(len(self.adjmatrix[i])):
-                    if self.adjmatrix[i][j] == 1:
-                        neighbors.append(self.gpoints[j])
-                    return neighbors
+                    if self.adjmatrix[i][j] == 1 and i != j:
+                        neighbors.append(Vector2(self.gpoints[j]))
+                return neighbors
         return None
-
 
     def drawGraph(self, screen):
         i = 0

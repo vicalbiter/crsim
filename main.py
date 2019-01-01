@@ -7,23 +7,42 @@ from random import uniform
 
 class Agent:
     def __init__(self, width):
+        #self.prevpos = Vector(0, 0)
         self.pos = Vector2(0, 0)
         self.target = Vector2(0, 0)
         self.width = width
+        self.goalStack = []
+        self.goal = None
 
     # Go to target at a certain speed
-    def goToTarget(self, speed):
-        dir = Vector2(self.target - self.pos)
+    def goToTarget(self, target, speed):
+        dir = Vector2(target - self.pos)
         if dir.length() > 3:
             self.pos = self.pos + speed*dir.normalize()
+        else:
+            if len(self.goalStack) != 0:
+                self.goal = self.goalStack.pop()
 
-    def findPath(self, navgraph):
+
+    def goTo(self, target, navgraph):
+        path = self.findPath(target, navgraph)
+        for p in path:
+            self.goalStack.insert(0,("goto", p))
+        if len(self.goalStack) != 0:
+            self.goal = self.goalStack.pop()
+
+    def performTask(self, goal):
+        if goal[0] == "goto":
+            self.goToTarget(goal[1], 3)
+
+    def findPath(self, target, navgraph):
         posclosest = self.findClosestPoint(self.pos, navgraph)
         tarclosest = self.findClosestPoint(self.target, navgraph)
-        self.astar(Node(None, posclosest), Node(None, tarclosest), navgraph)
+        path = self.bfs(Node(None, posclosest), Node(None, tarclosest), navgraph)
+        path.append(self.target)
+        return path
 
-
-    def astar(self, initial, goal, navgraph):
+    def bfs(self, initial, goal, navgraph):
         q = []
         current = initial
         while current.pos.x != goal.pos.x or current.pos.y != goal.pos.y:
@@ -31,13 +50,10 @@ class Agent:
             for p in neighbors:
                 q.insert(0, Node(current, p))
             current = q.pop()
-        print 'found it'
         path = []
         while current != None:
             path.insert(0, current.pos)
             current = current.parent
-        for p in path:
-            print p
         return path
 
 
@@ -64,17 +80,22 @@ class AgentGroup:
         for i in range(n):
             a = Agent(int(uniform(15,20)))
             a.pos = Vector2(uniform(0, w), uniform(0, h))
+            #a.prevpos = Vector2(a.pos.x, a.pos.y)
             #a.pos = Vector2(uniform(300, 500), uniform(200, 400))
             a.target = Vector2(uniform(0, w), uniform(0, h))
             #a.target = Vector2(a.pos.x, a.pos.y)
             self.agents.append(a)
-            a.findPath(navgraph)
 
         self.selected = self.agents[0]
 
+        # Push "go to target" goals into the agent's behavior stack
+        for a in self.agents:
+            a.goTo(a.target, navgraph)
+
+
     def updatePositions(self):
         for a in self.agents:
-            a.goToTarget(3)
+            a.performTask(a.goal)
 
     def handleCollisions(self):
         for a in self.agents:
@@ -154,11 +175,11 @@ class Simulation(PygameHelper):
         self.navgraph = NavGraph(adjmatrix, gpoints)
 
         # Initiliaze list of agents
-        self.agents = AgentGroup(1, self.w, self.h, self.navgraph)
+        self.agents = AgentGroup(3, self.w, self.h, self.navgraph)
 
     def update(self):
         # Update position of agents
-        #self.agents.updatePositions()
+        self.agents.updatePositions()
 
         # Handle collisions between agents
         self.agents.handleCollisions()
@@ -169,6 +190,8 @@ class Simulation(PygameHelper):
     def mouseUp(self, button, pos):
         if button == 3:
             self.agents.updateAgentTarget(pos)
+            self.agents.selected.goalStack = []
+            self.agents.selected.goTo(pos, self.navgraph)
         elif button == 1:
             self.agents.changeSelectedAgent(pos)
 

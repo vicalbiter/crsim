@@ -46,10 +46,17 @@ class Agent:
     def bfs(self, initial, goal, navgraph):
         q = []
         current = initial
+        visited = []
+        for i in range(len(navgraph.gpoints)):
+            visited.append(False)
+
         while current.pos.x != goal.pos.x or current.pos.y != goal.pos.y:
             neighbors = navgraph.neighbors(current.pos)
             for p in neighbors:
-                q.insert(0, Node(current, p))
+                idp = self.getID(p, navgraph.gpoints)
+                if visited[idp] == False:
+                    q.insert(0, Node(current, p))
+                    visited[idp] = True
             current = q.pop()
         path = []
         while current != None:
@@ -57,13 +64,19 @@ class Agent:
             current = current.parent
         return path
 
+    def getID(self, p, gpoints):
+        for point in range(len(gpoints)):
+            tp = Vector2(gpoints[point])
+            if p.x == tp.x and p.y == tp.y:
+                return point
+        return 0
 
     def findClosestPoint(self, pos, navgraph):
         closest = Vector2(navgraph.gpoints[0])
         cdistance = pos.distance_to(closest)
         for p in navgraph.gpoints:
             vp = Vector2(p)
-            if pos.x != vp.x and pos.y != vp.y:
+            if pos.x != vp.x or pos.y != vp.y:
                 if pos.distance_to(vp) < cdistance:
                     closest = vp
                     cdistance = pos.distance_to(vp)
@@ -84,7 +97,7 @@ class AgentGroup:
             #a.prevpos = Vector2(a.pos.x, a.pos.y)
             #a.pos = Vector2(uniform(300, 500), uniform(200, 400))
             #a.target = Vector2(uniform(0, w), uniform(0, h))
-            a.target = Vector2(700, 500)
+            a.target = Vector2(710, 500)
             #a.target = Vector2(a.pos.x, a.pos.y)
             a.priority = i
             self.agents.append(a)
@@ -142,9 +155,10 @@ class AgentGroup:
                 pygame.draw.circle(screen, (200,200,255), (int(a.pos.x), int(a.pos.y)), a.width)
 
 class NavGraph:
-    def __init__(self, adjmatrix, gpoints):
+    def __init__(self, adjmatrix, gpoints, obstacles):
         self.adjmatrix = adjmatrix
         self.gpoints = gpoints
+        self.obstacles = obstacles
 
     def neighbors(self, vertex):
         for i in range(len(self.gpoints)):
@@ -165,6 +179,10 @@ class NavGraph:
                 if self.adjmatrix[i][k] == 1:
                     pygame.draw.line(screen, (0, 0, 0), self.gpoints[i], self.gpoints[k], 1)
 
+    def drawObstacles(self, screen):
+        i = 0
+        for i in range(len(self.obstacles)):
+            pygame.draw.rect(screen, (0, 0, 0), self.obstacles[i])
 
 
 class Simulation(PygameHelper):
@@ -173,19 +191,21 @@ class Simulation(PygameHelper):
         PygameHelper.__init__(self, size=(self.w, self.h), fill=((255,255,255)))
 
         # Initialize navigation graph
-        adjmatrix = [[1,1,0,0,0,0,0,0,0,0,0,0,0],[1,1,1,1,1,0,0,0,0,0,0,0,0],
-        [0,1,1,0,0,0,0,0,0,0,0,0,0],[0,1,0,1,0,0,0,0,0,1,1,0,0],
-        [0,1,0,0,1,1,1,0,0,0,0,0,0],[0,0,0,0,1,1,0,0,0,0,0,0,0],
-        [0,0,0,0,1,0,0,1,0,0,0,0,0],[0,0,0,0,0,0,1,1,1,0,0,0,0],
-        [0,0,0,0,0,0,0,1,1,0,0,0,0],[0,0,0,1,0,0,0,0,0,1,0,0,0],
-        [0,0,0,1,0,0,0,0,0,0,1,1,1],[0,0,0,0,0,0,0,0,0,0,1,1,0],
-        [0,0,0,0,0,0,0,0,0,0,1,0,1]]
-        gpoints = [(400,500),(400,300),(400,100),(300,300),(600,400),(600,200),
-        (700,300),(700,200),(700,100),(200,100),(200,300),(100,200),(100,500)]
-        self.navgraph = NavGraph(adjmatrix, gpoints)
+        adjmatrix = [[1,1,0,0,0,0,0,0,0,0],[1,1,1,0,0,0,0,0,0,0],
+        [0,1,1,1,1,0,0,0,0,0], [0,0,1,1,0,0,0,0,0,0], [0,0,1,0,1,1,1,1,0,0],
+        [0,0,0,0,1,1,0,0,0,0], [0,0,0,0,1,0,1,0,0,0], [0,0,0,0,1,0,0,1,1,1],
+        [0,0,0,0,0,0,0,1,1,0], [0,0,0,0,0,0,0,1,0,1]]
+
+        gpoints = [(100,600), (100,500), (100, 300), (100, 100), (400, 300),
+        (400, 100), (400, 500), (700,300), (700,500), (700,100)]
+
+        obstacles = [Rect(200, 0, 100, 200), Rect(500, 0, 100, 200),
+        Rect(200, 400, 100, 200), Rect(500, 400, 100, 200)]
+
+        self.navgraph = NavGraph(adjmatrix, gpoints, obstacles)
 
         # Initiliaze list of agents
-        self.agents = AgentGroup(30, self.w, self.h, self.navgraph)
+        self.agents = AgentGroup(10, self.w, self.h, self.navgraph)
 
     def update(self):
         # Update position of agents
@@ -216,6 +236,9 @@ class Simulation(PygameHelper):
 
         # Draw NavGraph
         self.navgraph.drawGraph(self.screen)
+
+        # Draw obstacles
+        self.navgraph.drawObstacles(self.screen)
 
 s = Simulation()
 s.mainLoop(40)

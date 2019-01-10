@@ -33,6 +33,9 @@ obstáculo en el camino), saca el checkpoint anterior de la bs
 y pon directamente el nuevo
 -Añadir modelo de social forces de Helbing
 
+-Cambiar algoritmo de bfs para que sea un diccionario (hash) de lugares visitados
+en lugar de una lista pendeja
+
 Nuevos comportamientos
 -Añadir un behavior de "leave" -> cuando ya salió del vagón, ya se puede seguir
 sin mirar atrás

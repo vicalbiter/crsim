@@ -1,0 +1,49 @@
+updatePositions
+  performTask (Check last action available and perfom it)
+      if action is "goto"
+        goToTarget (go to the agent goal at a certain speed)
+          ***if agent is colliding with another agent with more mpriority
+            push action "stop" onto bs
+          if agent has arrived
+            finish action (pop action from bstack)
+          else
+            make a step towards target
+      if action is "stop"
+        stop
+        stay in place and avoid being in the way of others)
+        ***if has better priority than anyone around (check collisions)
+            finish action (pop action from bstack)
+
+
+*** These two instructions might work better if they are a single function
+"checkCollisions", whose output would be a flag "good to go"
+
+
+Inmediatos
+-Implementar un sistema de prioridades para las colisiones -> DONE
+-Construir un nuevo mapa con obstáculos y más parecido al del metro
+-Reorganizar código en AgentGroup -> PlanPathTo debería ser una función
+independiente de todo lo demás
+-Implementar un behavior "stop"
+-Cambiar el sistema de prioridades para que éste también sea dependiente
+de las velocidades de los agentes?
+-Añadir una manera de que un agente pueda "saltarse un checkpoint" -> si el
+siguiente checkpoint está en línea directa con él (i.e. no hay ningún
+obstáculo en el camino), saca el checkpoint anterior de la bs
+y pon directamente el nuevo
+-Añadir modelo de social forces de Helbing
+
+Nuevos comportamientos
+-Añadir un behavior de "leave" -> cuando ya salió del vagón, ya se puede seguir
+sin mirar atrás
+
+
+Pánico
+-Implementar un sistema de cambio de velocidades según el nivel de pánico
+de la persona
+-Implementar un cambio de color según el nivel de cambio de nivel de pánico de
+las personas
+
+Orden
+-Separar en varios archivos
+-Documentar

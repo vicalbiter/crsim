@@ -13,6 +13,7 @@ class Agent:
         self.width = width
         self.goalStack = []
         self.goal = None
+        self.priority = 0
 
     # Go to target at a certain speed
     def goToTarget(self, target, speed):
@@ -24,7 +25,7 @@ class Agent:
                 self.goal = self.goalStack.pop()
 
 
-    def goTo(self, target, navgraph):
+    def planPathTo(self, target, navgraph):
         path = self.findPath(target, navgraph)
         for p in path:
             self.goalStack.insert(0,("goto", p))
@@ -78,21 +79,23 @@ class AgentGroup:
     def __init__(self, n, w, h, navgraph):
         self.agents = []
         for i in range(n):
-            a = Agent(int(uniform(15,20)))
+            a = Agent(int(uniform(10,10)))
             a.pos = Vector2(uniform(0, w), uniform(0, h))
             #a.prevpos = Vector2(a.pos.x, a.pos.y)
             #a.pos = Vector2(uniform(300, 500), uniform(200, 400))
-            a.target = Vector2(uniform(0, w), uniform(0, h))
+            #a.target = Vector2(uniform(0, w), uniform(0, h))
+            a.target = Vector2(700, 500)
             #a.target = Vector2(a.pos.x, a.pos.y)
+            a.priority = i
             self.agents.append(a)
 
         self.selected = self.agents[0]
 
         # Push "go to target" goals into the agent's behavior stack
         for a in self.agents:
-            a.goTo(a.target, navgraph)
+            a.planPathTo(a.target, navgraph)
 
-
+    # Update positions of the agents according to their last goal
     def updatePositions(self):
         for a in self.agents:
             a.performTask(a.goal)
@@ -104,12 +107,19 @@ class AgentGroup:
                     continue
                 else:
                     d = a.pos.distance_to(a2.pos)
-                    if d < 40:
-                        overlap = 40 - d
+                    if d < 20:
+                        overlap = 20 - d
                         dir = Vector2(a2.pos - a.pos)
                         dir.scale_to_length(overlap/2)
-                        a2.pos = a2.pos + dir
-                        a.pos = a.pos - dir
+                        if a.priority == a2.priority:
+                            a2.pos = a2.pos + dir
+                            a.pos = a.pos - dir
+                        if a.priority > a2.priority:
+                            a2.pos = a2.pos + dir
+                            a.pos = a.pos
+                        if a.priority < a2.priority:
+                            a2.pos = a2.pos
+                            a.pos = a.pos - dir
 
     def changeSelectedAgent(self, pos):
         for a in self.agents:
@@ -175,7 +185,7 @@ class Simulation(PygameHelper):
         self.navgraph = NavGraph(adjmatrix, gpoints)
 
         # Initiliaze list of agents
-        self.agents = AgentGroup(3, self.w, self.h, self.navgraph)
+        self.agents = AgentGroup(30, self.w, self.h, self.navgraph)
 
     def update(self):
         # Update position of agents

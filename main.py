@@ -6,7 +6,7 @@ from pygame import *
 from pygame.locals import *
 from math import e, pi, cos, sin, sqrt
 from random import uniform
-import triangulateMap
+import triangulateMap as tm
 
 class AgentGroup:
     def __init__(self, n, w, h, navgraph, obstaclesR):
@@ -27,8 +27,8 @@ class AgentGroup:
         self.selected = self.agents[0]
 
         # Push "go to target" goals into the agent's behavior stack
-        for a in self.agents:
-            a.planPathTo(a.target, navgraph)
+        #for a in self.agents:
+        #    a.planPathTo(a.target, navgraph)
 
     # Update positions of the agents according to their last goal
     def updatePositions(self):
@@ -113,7 +113,6 @@ class NavGraph:
         return None
 
     def drawGraph(self, screen):
-        i = 0
         for i in range(len(self.gpoints)):
             pygame.draw.circle(screen, (255, 0, 255), self.gpoints[i], 10)
             for k in range(len(self.gpoints)):
@@ -127,10 +126,11 @@ class NavGraph:
 
 class Simulation(PygameHelper):
     def __init__(self):
-        self.w, self.h = 800, 600
+        self.w, self.h = 1396, 2977
         PygameHelper.__init__(self, size=(self.w, self.h), fill=((255,255,255)))
 
         # Initialize navigation graph
+        '''
         adjmatrix = [[1,1,0,0,0,0,0,0,0,0],[1,1,1,0,0,0,0,0,0,0],
         [0,1,1,1,1,0,0,0,0,0], [0,0,1,1,0,0,0,0,0,0], [0,0,1,0,1,1,1,1,0,0],
         [0,0,0,0,1,1,0,0,0,0], [0,0,0,0,1,0,1,0,0,0], [0,0,0,0,1,0,0,1,1,1],
@@ -138,15 +138,18 @@ class Simulation(PygameHelper):
 
         gpoints = [(100,600), (100,500), (100, 300), (100, 100), (400, 300),
         (400, 100), (400, 500), (700,300), (700,500), (700,100)]
-
+        '''
         obstacles = [Rect(200, 0, 100, 200), Rect(500, 0, 100, 200),
         Rect(200, 400, 100, 200), Rect(500, 400, 100, 200)]
 
         obstaclesR = [Rectangle(200, 0, 100, 200), Rectangle(500, 0, 100, 200),
         Rectangle(200, 400, 100, 200), Rectangle(500, 400, 100, 200)]
 
-        #ext = triangulateMap('./images/car.png', './output/car_features.poly')
-        #aux = ext.generateTriangularMesh(False)
+        ext = tm.triangulateMap('./images/car.png', './output/car_features.poly')
+        triangulatedMap = ext.generateTriangularMesh(False)
+
+        adjmatrix = triangulatedMap[1]
+        gpoints = triangulatedMap[0]
 
         self.navgraph = NavGraph(adjmatrix, gpoints, obstacles)
 
@@ -157,13 +160,14 @@ class Simulation(PygameHelper):
         self.f = open("tets.txt", "w")
 
     def update(self):
+        pass
         # Update position of agents
-        self.agents.updatePositions()
+        #self.agents.updatePositions()
 
-        self.agents.updateVelocities()
+        #self.agents.updateVelocities()
 
         # Handle collisions between agents
-        self.agents.handleCollisions()
+        #self.agents.handleCollisions()
 
         # Write positions to text
         #self.agents.writePositions(self.f)

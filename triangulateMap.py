@@ -217,9 +217,9 @@ class triangulateMap(object):
     #diccionario y la matriz de adyacencia
     def createOutputTriangles(self, array):
         #generamos un diccionario con los vertices y sus indices (que seran las llaves)
-        dictVertex = {}
+        dictVertex = []
         for i in range(len(array['vertices'])):
-            dictVertex[i] = (array['vertices'][i][0],array['vertices'][i][1])
+            dictVertex.append((int(array['vertices'][i][0]),int(array['vertices'][i][1])))
 
         #metemos los segmentos originales primero
         adjMatrix = np.zeros((len(array['vertices']), len(array['vertices'])))

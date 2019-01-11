@@ -26,7 +26,7 @@ class Rectangle:
 def getIntersection(line1, line2):
     x = (line2.ord - line1.ord) * 1.0/ (line1.slope - line2.slope)
     y = (line1.slope * x * 1.0) + line1.ord
-    print (x, y)
+    #print (x, y)
     return pointIsContainedInSegment(line1, x, y) and pointIsContainedInSegment(line2, x, y)
 
 def pointIsContainedInSegment(line, x, y):

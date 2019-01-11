@@ -7,7 +7,7 @@ from math import e, pi, cos, sin, sqrt
 from random import uniform
 
 class Agent:
-    def __init__(self, width):
+    def __init__(self, width, obstaclesR):
         #self.prevpos = Vector(0, 0)
         self.id = 0
         self.pos = Vector2(0, 0)
@@ -16,10 +16,25 @@ class Agent:
         self.goalStack = []
         self.goal = None
         self.priority = 0
+        self.obstacles = obstaclesR
+        self.lineToTNextGoal = Line(Point(0, 0), Point(0, 0))
 
     # Go to target at a certain speed
+    # If the agent can see its next target directly (i.e. there are no obstacles
+    # in between), pop the current action from the BS
     def goToTarget(self, target, speed):
         dir = Vector2(target - self.pos)
+        if len(self.goalStack) != 0:
+            nextGoal = self.goalStack[len(self.goalStack) - 1]
+            self.lineToNextGoal = Line(Point(self.pos.x, self.pos.y), Point(nextGoal[1].x, nextGoal[1].y))
+            for r in range(len(self.obstacles)):
+                result = getIntersectionLR(self.lineToNextGoal, self.obstacles[r])
+                if result == True:
+                    break;
+                else:
+                    if r == len(self.obstacles) - 1:
+                        self.goal = self.goalStack.pop()
+            #l = Line(Point(pos.x, pos.y), Point())
         if dir.length() > 3:
             self.pos = self.pos + speed*dir.normalize()
         else:
@@ -90,12 +105,12 @@ class Node:
         self.pos = pos
 
 class AgentGroup:
-    def __init__(self, n, w, h, navgraph):
+    def __init__(self, n, w, h, navgraph, obstaclesR):
         self.agents = []
         for i in range(n):
-            a = Agent(int(uniform(10,10)))
-            a.pos = Vector2(100, 600)
-            #a.pos = Vector2(uniform(0, w), uniform(0, h))
+            a = Agent(int(uniform(10,10)), obstaclesR)
+            #a.pos = Vector2(100, 600)
+            a.pos = Vector2(uniform(0, w), uniform(0, h))
             #a.prevpos = Vector2(a.pos.x, a.pos.y)
             #a.pos = Vector2(uniform(300, 500), uniform(200, 400))
             #a.target = Vector2(uniform(0, w), uniform(0, h))
@@ -155,6 +170,9 @@ class AgentGroup:
             pygame.draw.circle(screen, (255,0,0), (int(a.target.x), int(a.target.y)), 30, 1)
             pygame.draw.circle(screen, (0,0,0), (int(a.pos.x), int(a.pos.y)), a.width+1)
 
+            #pygame.draw.line(screen, (0,255,255), (a.lineToNextGoal.p1.x, a.lineToNextGoal.p1.y),
+            #(a.lineToNextGoal.p2.x, a.lineToNextGoal.p2.y), 5)
+
             # Distinguish between the selected agent and the other ones
             if a == self.selected:
                 pygame.draw.circle(screen, (200,250,255), (int(a.pos.x), int(a.pos.y)), a.width)
@@ -208,10 +226,13 @@ class Simulation(PygameHelper):
         obstacles = [Rect(200, 0, 100, 200), Rect(500, 0, 100, 200),
         Rect(200, 400, 100, 200), Rect(500, 400, 100, 200)]
 
+        obstaclesR = [Rectangle(200, 0, 100, 200), Rectangle(500, 0, 100, 200),
+        Rectangle(200, 400, 100, 200), Rectangle(500, 400, 100, 200)]
+
         self.navgraph = NavGraph(adjmatrix, gpoints, obstacles)
 
         # Initiliaze list of agents
-        self.agents = AgentGroup(1, self.w, self.h, self.navgraph)
+        self.agents = AgentGroup(50, self.w, self.h, self.navgraph, obstaclesR)
 
         # Open a file to save all the agent's positions in real time
         self.f = open("tets.txt", "w")

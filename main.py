@@ -63,18 +63,26 @@ class Agent:
     def bfs(self, initial, goal, navgraph):
         q = []
         current = initial
-        visited = []
-        for i in range(len(navgraph.gpoints)):
-            visited.append(False)
+        visited = set([initial])
+        #for i in range(len(navgraph.gpoints)):
+        #    visited.append(False)
 
         while current.pos.x != goal.pos.x or current.pos.y != goal.pos.y:
+            # Highly optimizible
             neighbors = navgraph.neighbors(current.pos)
+            # Highly optimizible
             for p in neighbors:
-                idp = self.getID(p, navgraph.gpoints)
-                if visited[idp] == False:
-                    q.insert(0, Node(current, p))
-                    visited[idp] = True
+                node = Node(current, p)
+                if node not in visited:
+                    q.insert(0, node)
+                    visited.add(node)
             current = q.pop()
+            #for p in neighbors:
+            #    idp = self.getID(p, navgraph.gpoints)
+            #    if visited[idp] == False:
+            #        q.insert(0, Node(current, p))
+            #        visited[idp] = True
+            #current = q.pop()
         path = []
         while current != None:
             path.insert(0, current.pos)
@@ -114,7 +122,7 @@ class AgentGroup:
             #a.prevpos = Vector2(a.pos.x, a.pos.y)
             #a.pos = Vector2(uniform(300, 500), uniform(200, 400))
             #a.target = Vector2(uniform(0, w), uniform(0, h))
-            a.target = Vector2(710, 500)
+            a.target = Vector2(100, 550)
             #a.target = Vector2(a.pos.x, a.pos.y)
             a.priority = i
             a.id = i

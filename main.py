@@ -6,6 +6,7 @@ from pygame import *
 from pygame.locals import *
 from math import e, pi, cos, sin, sqrt
 from random import uniform
+import triangulateMap
 
 class AgentGroup:
     def __init__(self, n, w, h, navgraph, obstaclesR):
@@ -33,6 +34,18 @@ class AgentGroup:
     def updatePositions(self):
         for a in self.agents:
             a.performTask(a.goal)
+
+    def updateVelocities(self):
+        for a in self.agents:
+            closest = self.chooseClosest(a, self.agents)
+            a.updateVelocity(closest)
+
+    def chooseClosest(self, a, neighbors):
+        closest = []
+        for n in neighbors:
+            if a.pos.distance_to(n.pos) < 100:
+                closest.append(n)
+        return closest
 
     def handleCollisions(self):
         for a in self.agents:
@@ -132,10 +145,13 @@ class Simulation(PygameHelper):
         obstaclesR = [Rectangle(200, 0, 100, 200), Rectangle(500, 0, 100, 200),
         Rectangle(200, 400, 100, 200), Rectangle(500, 400, 100, 200)]
 
+        #ext = triangulateMap('./images/car.png', './output/car_features.poly')
+        #aux = ext.generateTriangularMesh(False)
+
         self.navgraph = NavGraph(adjmatrix, gpoints, obstacles)
 
         # Initiliaze list of agents
-        self.agents = AgentGroup(50, self.w, self.h, self.navgraph, obstaclesR)
+        self.agents = AgentGroup(1, self.w, self.h, self.navgraph, obstaclesR)
 
         # Open a file to save all the agent's positions in real time
         self.f = open("tets.txt", "w")
@@ -143,6 +159,8 @@ class Simulation(PygameHelper):
     def update(self):
         # Update position of agents
         self.agents.updatePositions()
+
+        self.agents.updateVelocities()
 
         # Handle collisions between agents
         self.agents.handleCollisions()
@@ -157,7 +175,7 @@ class Simulation(PygameHelper):
         if button == 3:
             self.agents.updateAgentTarget(pos)
             self.agents.selected.goalStack = []
-            self.agents.selected.goTo(pos, self.navgraph)
+            self.agents.selected.planPathTo(pos, self.navgraph)
         elif button == 1:
             self.agents.changeSelectedAgent(pos)
 

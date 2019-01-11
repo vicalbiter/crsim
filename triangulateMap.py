@@ -301,6 +301,6 @@ class triangulateMap(object):
 
 
 #Modo de uso
-ext = triangulateMap('./images/car.png', './output/car_features.poly')
-aux = ext.generateTriangularMesh(False)
-print(aux)
+#ext = triangulateMap('./images/car.png', './output/car_features.poly')
+#aux = ext.generateTriangularMesh(False)
+#print(aux)

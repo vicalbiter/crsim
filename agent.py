@@ -25,9 +25,9 @@ class Agent:
     # Go to target at a certain speed
     # If the agent can see its next target directly (i.e. there are no obstacles
     # in between), pop the current action from the BS
-    def goToTarget(self, target, speed):
-        dir = Vector2(target - self.pos)
-        self.updateVelocity(dir, 3)
+    def goToTarget(self, target):
+        self.dir = Vector2(target - self.pos)
+        #self.updateVelocity(dir)
         if len(self.goalStack) != 0:
             # If the next goal is within reach, skip the current goal
             nextGoal = self.goalStack[len(self.goalStack) - 1]
@@ -40,14 +40,19 @@ class Agent:
                     if r == len(self.obstacles) - 1:
                         self.goal = self.goalStack.pop()
             #l = Line(Point(pos.x, pos.y), Point())
-        if dir.length() > 3:
+        if self.dir.length() > 3:
             self.pos = self.pos + self.velocity
         else:
             if len(self.goalStack) != 0:
                 self.goal = self.goalStack.pop()
 
-    def updateVelocity(self, dir, speed):
-        self.velocity = speed*dir.normalize()
+    def updateVelocity(self, neighbors):
+        self.velocity = 2.0*self.dir.normalize()
+        separation = self.calculateSeparationVector(neighbors)
+        velchange = separation
+        if velchange.length() > 0:
+            velchange.scale_to_length(0.2)
+        self.velocity = self.velocity + velchange
 
     # Plan a bath, using BFS to a certain target, and add all the intermediate
     # steps necessary to get to that path to the behavior stack
@@ -61,7 +66,7 @@ class Agent:
     # Perform the task at hand
     def performTask(self, goal):
         if goal[0] == "goto":
-            self.goToTarget(goal[1], 3)
+            self.goToTarget(goal[1])
 
     # Find a path from the current position to the target position
     def findPath(self, target, navgraph):
@@ -118,6 +123,17 @@ class Agent:
                     closest = vp
                     cdistance = pos.distance_to(vp)
         return closest
+
+    def calculateSeparationVector(self, neighbors):
+        separation = Vector2(0, 0)
+        for neighbor in neighbors:
+            if neighbor.pos.x == self.pos.x and neighbor.pos.y == self.pos.y:
+                continue;
+            distance = self.pos.distance_to(neighbor.pos)
+            vector = self.pos - neighbor.pos
+            vector.scale_to_length(10/distance)
+            separation = separation + vector
+        return separation
 
 class Node:
     def __init__(self, parent, pos):

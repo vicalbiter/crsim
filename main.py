@@ -1,4 +1,5 @@
 import pygame
+from geometry import *
 from pygamehelper import *
 from pygame import *
 from pygame.locals import *
@@ -8,6 +9,7 @@ from random import uniform
 class Agent:
     def __init__(self, width):
         #self.prevpos = Vector(0, 0)
+        self.id = 0
         self.pos = Vector2(0, 0)
         self.target = Vector2(0, 0)
         self.width = width
@@ -87,19 +89,20 @@ class Node:
         self.parent = parent
         self.pos = pos
 
-
 class AgentGroup:
     def __init__(self, n, w, h, navgraph):
         self.agents = []
         for i in range(n):
             a = Agent(int(uniform(10,10)))
-            a.pos = Vector2(uniform(0, w), uniform(0, h))
+            a.pos = Vector2(100, 600)
+            #a.pos = Vector2(uniform(0, w), uniform(0, h))
             #a.prevpos = Vector2(a.pos.x, a.pos.y)
             #a.pos = Vector2(uniform(300, 500), uniform(200, 400))
             #a.target = Vector2(uniform(0, w), uniform(0, h))
             a.target = Vector2(710, 500)
             #a.target = Vector2(a.pos.x, a.pos.y)
             a.priority = i
+            a.id = i
             self.agents.append(a)
 
         self.selected = self.agents[0]
@@ -141,6 +144,10 @@ class AgentGroup:
 
     def updateAgentTarget(self, pos):
         self.selected.target = Vector2(pos)
+
+    def writePositions(self, file):
+        for a in self.agents:
+            file.write("%i/(%f, %f, 0)\n" %(a.id, a.pos.x, a.pos.y))
 
     def drawAgents(self, screen):
         # Draw all agents
@@ -184,7 +191,6 @@ class NavGraph:
         for i in range(len(self.obstacles)):
             pygame.draw.rect(screen, (0, 0, 0), self.obstacles[i])
 
-
 class Simulation(PygameHelper):
     def __init__(self):
         self.w, self.h = 800, 600
@@ -205,7 +211,10 @@ class Simulation(PygameHelper):
         self.navgraph = NavGraph(adjmatrix, gpoints, obstacles)
 
         # Initiliaze list of agents
-        self.agents = AgentGroup(10, self.w, self.h, self.navgraph)
+        self.agents = AgentGroup(1, self.w, self.h, self.navgraph)
+
+        # Open a file to save all the agent's positions in real time
+        self.f = open("tets.txt", "w")
 
     def update(self):
         # Update position of agents
@@ -213,6 +222,9 @@ class Simulation(PygameHelper):
 
         # Handle collisions between agents
         self.agents.handleCollisions()
+
+        # Write positions to text
+        #self.agents.writePositions(self.f)
 
     def keyUp(self, key):
         pass

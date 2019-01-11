@@ -21,9 +21,7 @@ updatePositions
 
 Inmediatos
 -Implementar un sistema de prioridades para las colisiones -> DONE
--Construir un nuevo mapa con obstáculos y más parecido al del metro
--Reorganizar código en AgentGroup -> PlanPathTo debería ser una función
-independiente de todo lo demás
+-Construir un nuevo mapa con obstáculos y más parecido al del metro -> DONE
 -Implementar un behavior "stop"
 -Cambiar el sistema de prioridades para que éste también sea dependiente
 de las velocidades de los agentes?
@@ -31,6 +29,7 @@ de las velocidades de los agentes?
 siguiente checkpoint está en línea directa con él (i.e. no hay ningún
 obstáculo en el camino), saca el checkpoint anterior de la bs
 y pon directamente el nuevo
+-Hacer que los agentes no aparezcan donde hay obstáculos
 -Añadir modelo de social forces de Helbing
 
 -Cambiar algoritmo de bfs para que sea un diccionario (hash) de lugares visitados
@@ -50,3 +49,5 @@ las personas
 Orden
 -Separar en varios archivos
 -Documentar
+-Reorganizar código en AgentGroup -> PlanPathTo debería ser una función
+independiente de todo lo demás
